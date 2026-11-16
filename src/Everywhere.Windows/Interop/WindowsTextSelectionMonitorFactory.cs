@@ -1,4 +1,4 @@
-﻿using PixelPoint = Avalonia.PixelPoint;
+using PixelPoint = Avalonia.PixelPoint;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -14,6 +14,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 using Everywhere.Automation;
 using Everywhere.ProcessIsolation.Automation;
 using Everywhere.ProcessIsolation.Hosts.Diagnostics;
+using Everywhere.TextSelection;
 using Everywhere.Utilities;
 using Everywhere.Windows.Automation;
 using Everywhere.Windows.Interop.UIAutomation;
@@ -290,6 +291,22 @@ public sealed class WindowsTextSelectionMonitorFactory : ITextSelectionMonitorFa
 
             if (shouldDetectSelection)
             {
+                var configuration = Volatile.Read(ref _configuration);
+                if (configuration.TriggerMode == TextSelectionTriggerMode.ShortcutOnly)
+                {
+                    shouldDetectSelection = false;
+                }
+                else if (configuration.TriggerMode == TextSelectionTriggerMode.ModifierKey)
+                {
+                    if (!CheckModifier(configuration.TriggerModifierKey))
+                    {
+                        shouldDetectSelection = false;
+                    }
+                }
+            }
+
+            if (shouldDetectSelection)
+            {
                 // Keep one executing attempt and only the latest pending trigger.
                 _pendingDetections.Writer.TryWrite(
                     new DetectionTrigger(
@@ -528,6 +545,33 @@ public sealed class WindowsTextSelectionMonitorFactory : ITextSelectionMonitorFa
             Volatile.Write(ref _configuration, configuration);
             _reusableCancellationTokenSource.Cancel();
             return ValueTask.CompletedTask;
+        }
+
+        public ValueTask TriggerDetectionAsync(CancellationToken cancellationToken = default)
+        {
+            if (Volatile.Read(ref _isDisposed) != 0) return ValueTask.CompletedTask;
+            var currentHwnd = (HWND)PInvoke.GetForegroundWindow();
+            if (currentHwnd == HWND.Null) return ValueTask.CompletedTask;
+            PInvoke.GetCursorPos(out var cursorPos);
+            _pendingDetections.Writer.TryWrite(
+                new DetectionTrigger(
+                    currentHwnd,
+                    new PixelPoint(cursorPos.X, cursorPos.Y),
+                    _mouseDownCursor,
+                    _mouseUpCursor,
+                    _mouseDownClipboardSequence,
+                    _reusableCancellationTokenSource.Token));
+            return ValueTask.CompletedTask;
+        }
+
+        private static bool CheckModifier(Avalonia.Input.KeyModifiers modifiers)
+        {
+            if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Alt) && !IsKeyPressing(VIRTUAL_KEY.VK_MENU)) return false;
+            if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Control) && !IsKeyPressing(VIRTUAL_KEY.VK_CONTROL)) return false;
+            if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Shift) && !IsKeyPressing(VIRTUAL_KEY.VK_SHIFT)) return false;
+            if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Meta) &&
+                !IsKeyPressing(VIRTUAL_KEY.VK_LWIN) && !IsKeyPressing(VIRTUAL_KEY.VK_RWIN)) return false;
+            return true;
         }
 
         private static ProcessIdentity? GetProcessInformationByHwnd(HWND hWnd)

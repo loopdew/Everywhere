@@ -1,4 +1,6 @@
+using Avalonia.Input;
 using Everywhere.Automation;
+using Everywhere.TextSelection;
 using MessagePack;
 
 namespace Everywhere.ProcessIsolation.Automation;
@@ -19,13 +21,32 @@ public sealed partial class TextSelectionMonitoringConfiguration
     [Key(2)]
     public required string[] CopyFallbackExcludedApplications { get; init; }
 
+    /// <summary>Gets the gesture mode required to trigger text selection detection or toolbar.</summary>
+    [Key(3)]
+    public required TextSelectionTriggerMode TriggerMode { get; init; }
+
+    /// <summary>Gets the modifier key required when TriggerMode is ModifierKey.</summary>
+    [Key(4)]
+    public required KeyModifiers TriggerModifierKey { get; init; }
+
     /// <summary>Creates the default safe monitoring policy.</summary>
     public static TextSelectionMonitoringConfiguration CreateDefault() => new()
     {
         IsFullscreenApplicationExcluded = true,
         ExcludedApplications = [],
         CopyFallbackExcludedApplications = [],
+        TriggerMode = TextSelectionTriggerMode.Always,
+        TriggerModifierKey = KeyModifiers.Alt,
     };
+}
+
+/// <summary>Explicitly triggers one active text-selection monitor.</summary>
+[MessagePackObject]
+public sealed partial class TriggerManualTextSelectionMonitoringRequest
+{
+    /// <summary>Monitor resource ID allocated by Main.</summary>
+    [Key(0)]
+    public required long MonitorId { get; init; }
 }
 
 /// <summary>Describes the acknowledged result of changing native text-selection monitoring.</summary>

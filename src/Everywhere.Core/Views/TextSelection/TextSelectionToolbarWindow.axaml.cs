@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Input;
 #if MACOS
 using Avalonia.Native;
@@ -114,6 +114,7 @@ public partial class TextSelectionToolbarWindow : Window
 
         windowHelper.SetWindowProperties(this, inputMode: WindowInputMode.NonActivating, layer: WindowLayer.Overlay);
         ToolbarRoot.ActionInvoked += HandleActionInvoked;
+        ToolbarRoot.DragRequested += HandleDragRequested;
         ToolbarRoot.FreeformChatInputRequested += HandleFreeformChatInputRequested;
         ToolbarRoot.FreeformChatExiting += HandleFreeformChatExiting;
         ToolbarRoot.MenuBoundsChanged += HandleMenuBoundsChanged;
@@ -121,6 +122,13 @@ public partial class TextSelectionToolbarWindow : Window
         ToolbarRoot.ExcludeApplicationRequested += () => ExcludeApplicationRequested?.Invoke();
         SizeChanged += (_, _) => UpdateBounds();
         ScalingChanged += (_, _) => UpdateBounds();
+        PositionChanged += (_, _) =>
+        {
+            if (_isManuallyPositioned && Settings.TextSelection.PositionMode == TextSelectionPositionMode.RememberLast)
+            {
+                Settings.TextSelection.LastToolbarPosition = Position;
+            }
+        };
         AddHandler(KeyDownEvent, HandleKeyDown, RoutingStrategies.Tunnel);
     }
 
@@ -203,6 +211,11 @@ public partial class TextSelectionToolbarWindow : Window
             return false;
         }
 
+        if (Settings.TextSelection.PositionMode == TextSelectionPositionMode.FollowCursor)
+        {
+            _isManuallyPositioned = false;
+        }
+
         _anchor = anchor;
         _items = items;
         ToolbarRoot.Actions = items.AsValueEnumerable().Select(item => item.Action).ToArray();
@@ -265,11 +278,22 @@ public partial class TextSelectionToolbarWindow : Window
                     ToolbarRoot.SetCurrentValue(TransitionsProperty, null);
                     try
                     {
-                        Reposition(_anchor, MeasuredPixelSize());
+                        if (_isManuallyPositioned)
+                        {
+                            _toolbarBounds = ClampToScreen(Position, MeasuredPixelSize());
+                        }
+                        else if (Settings.TextSelection.PositionMode == TextSelectionPositionMode.RememberLast && Settings.TextSelection.LastToolbarPosition is { } lastPos)
+                        {
+                            _toolbarBounds = ClampToScreen(lastPos, MeasuredPixelSize());
+                        }
+                        else
+                        {
+                            Reposition(_anchor, MeasuredPixelSize());
 
-                        // Moving to the target monitor can change DesktopScaling and SizeToContent.
-                        // Re-measure there before publishing the rectangle used for outside clicks.
-                        _toolbarBounds = Reposition(_anchor, MeasuredPixelSize());
+                            // Moving to the target monitor can change DesktopScaling and SizeToContent.
+                            // Re-measure there before publishing the rectangle used for outside clicks.
+                            _toolbarBounds = Reposition(_anchor, MeasuredPixelSize());
+                        }
                         _isPreparingPresentation = false;
                         _windowHelper.RaiseWindow(this);
                         UpdateInputWatch();
@@ -366,6 +390,18 @@ public partial class TextSelectionToolbarWindow : Window
         UpdateOpacityTracking();
     }
 
+    private bool _isManuallyPositioned;
+
+    private void HandleDragRequested(object? sender, PointerPressedEventArgs e)
+    {
+        _isManuallyPositioned = true;
+        BeginMoveDrag(e);
+        if (Settings.TextSelection.PositionMode == TextSelectionPositionMode.RememberLast)
+        {
+            Settings.TextSelection.LastToolbarPosition = Position;
+        }
+    }
+
     private void UpdateBounds()
     {
         if (!IsVisible || _isPreparingPresentation)
@@ -373,9 +409,33 @@ public partial class TextSelectionToolbarWindow : Window
             return;
         }
 
-        _toolbarBounds = Reposition(_anchor, PixelSize.FromSize(Bounds.Size, DesktopScaling));
+        if (_isManuallyPositioned)
+        {
+            _toolbarBounds = ClampToScreen(Position, MeasuredPixelSize());
+        }
+        else if (Settings.TextSelection.PositionMode == TextSelectionPositionMode.RememberLast && Settings.TextSelection.LastToolbarPosition is { } lastPos)
+        {
+            _toolbarBounds = ClampToScreen(lastPos, MeasuredPixelSize());
+        }
+        else
+        {
+            _toolbarBounds = Reposition(_anchor, PixelSize.FromSize(Bounds.Size, DesktopScaling));
+        }
+
         UpdateInputWatch();
         UpdateOpacityTracking();
+    }
+
+    private PixelRect ClampToScreen(PixelPoint position, PixelSize size)
+    {
+        var screen = Screens.ScreenFromPoint(position) ?? Screens.Primary ?? Screens.All.FirstOrDefault();
+        var workingArea = screen?.WorkingArea ?? new PixelRect(position, size);
+
+        var x = Math.Clamp(position.X, workingArea.X + EdgeMargin, Math.Max(workingArea.X + EdgeMargin, workingArea.Right - size.Width - EdgeMargin));
+        var y = Math.Clamp(position.Y, workingArea.Y + EdgeMargin, Math.Max(workingArea.Y + EdgeMargin, workingArea.Bottom - size.Height - EdgeMargin));
+
+        Position = new PixelPoint(x, y);
+        return new PixelRect(Position, size);
     }
 
     private void UpdateOpacityTracking()

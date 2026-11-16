@@ -4620,4 +4620,82 @@
     <data name="Common_CopyLinkText" xml:space="preserve">
         <value>复制链接文本</value>
     </data>
+    <data name="TextSelectionSettings_TriggerMode_Header" xml:space="preserve">
+        <value>触发模式</value>
+    </data>
+    <data name="TextSelectionSettings_TriggerMode_Description" xml:space="preserve">
+        <value>划选文本后如何触发划词工具条或助手。</value>
+    </data>
+    <data name="TextSelectionTriggerMode_Always" xml:space="preserve">
+        <value>自动弹出（划选后立即弹出）</value>
+    </data>
+    <data name="TextSelectionTriggerMode_ModifierKey" xml:space="preserve">
+        <value>按住修饰键划词触发</value>
+    </data>
+    <data name="TextSelectionTriggerMode_ShortcutOnly" xml:space="preserve">
+        <value>仅快捷键主动唤出</value>
+    </data>
+    <data name="TextSelectionSettings_TriggerModifierKey_Header" xml:space="preserve">
+        <value>触发修饰键</value>
+    </data>
+    <data name="TextSelectionSettings_TriggerModifierKey_Description" xml:space="preserve">
+        <value>划选文本时需要按住的修饰键（如 Alt、Ctrl、Shift）。</value>
+    </data>
+    <data name="TextSelectionSettings_ResultWindowMode_Header" xml:space="preserve">
+        <value>结果展示方式</value>
+    </data>
+    <data name="TextSelectionSettings_ResultWindowMode_Description" xml:space="preserve">
+        <value>选择在独立紧凑悬浮窗中展示 AI 结果还是转入主聊天窗口。</value>
+    </data>
+    <data name="TextSelectionResultWindowMode_Standalone" xml:space="preserve">
+        <value>独立紧凑悬浮窗</value>
+    </data>
+    <data name="TextSelectionResultWindowMode_MainChatWindow" xml:space="preserve">
+        <value>主聊天窗口</value>
+    </data>
+    <data name="TextSelectionSettings_PositionMode_Header" xml:space="preserve">
+        <value>工具条位置模式</value>
+    </data>
+    <data name="TextSelectionSettings_PositionMode_Description" xml:space="preserve">
+        <value>选择工具条跟随光标位置还是记住上次拖拽调整的位置。</value>
+    </data>
+    <data name="TextSelectionPositionMode_FollowCursor" xml:space="preserve">
+        <value>跟随光标</value>
+    </data>
+    <data name="TextSelectionPositionMode_RememberLast" xml:space="preserve">
+        <value>记住上次位置</value>
+    </data>
+    <data name="TextSelectionToolbar_DragHandle" xml:space="preserve">
+        <value>拖拽调整工具条位置</value>
+    </data>
+    <data name="TextSelectionResultWindow_Title" xml:space="preserve">
+        <value>划词助手</value>
+    </data>
+    <data name="TextSelectionResultWindow_Pin" xml:space="preserve">
+        <value>钉住窗口</value>
+    </data>
+    <data name="TextSelectionResultWindow_Unpin" xml:space="preserve">
+        <value>取消钉住</value>
+    </data>
+    <data name="TextSelectionResultWindow_OpenInMainWindow" xml:space="preserve">
+        <value>在主窗口打开</value>
+    </data>
+    <data name="TextSelectionResultWindow_CopyResult" xml:space="preserve">
+        <value>复制结果</value>
+    </data>
+    <data name="TextSelectionResultWindow_Copied" xml:space="preserve">
+        <value>结果已复制到剪贴板</value>
+    </data>
+    <data name="TextSelectionResultWindow_FollowUpPlaceholder" xml:space="preserve">
+        <value>继续追问... (Enter 发送)</value>
+    </data>
+    <data name="TextSelectionResultWindow_OriginalText" xml:space="preserve">
+        <value>选中文本</value>
+    </data>
+    <data name="ShortcutSettings_TextSelectionToolbar_Header" xml:space="preserve">
+        <value>划词助手</value>
+    </data>
+    <data name="ShortcutSettings_TextSelectionToolbar_Description" xml:space="preserve">
+        <value>对当前选中的文本主动唤出划词助手。</value>
+    </data>
 </root>

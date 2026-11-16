@@ -3,6 +3,7 @@ using System.Threading.Channels;
 using Everywhere.Automation;
 using Everywhere.ProcessIsolation.Automation;
 using Everywhere.ProcessIsolation.Hosts.Diagnostics;
+using Everywhere.TextSelection;
 using Everywhere.Utilities;
 
 namespace Everywhere.Mac.Interop;
@@ -167,6 +168,23 @@ public sealed class MacTextSelectionMonitorFactory : ITextSelectionMonitorFactor
 
             if (shouldDetectSelection)
             {
+                var configuration = Volatile.Read(ref _configuration);
+                if (configuration.TriggerMode == TextSelectionTriggerMode.ShortcutOnly)
+                {
+                    shouldDetectSelection = false;
+                }
+                else if (configuration.TriggerMode == TextSelectionTriggerMode.ModifierKey)
+                {
+                    var modifiers = cgEvent.Flags.ToAvaloniaKeyModifiers();
+                    if ((modifiers & configuration.TriggerModifierKey) != configuration.TriggerModifierKey)
+                    {
+                        shouldDetectSelection = false;
+                    }
+                }
+            }
+
+            if (shouldDetectSelection)
+            {
                 BeginDetect();
             }
         }
@@ -300,6 +318,13 @@ public sealed class MacTextSelectionMonitorFactory : ITextSelectionMonitorFactor
             cancellationToken.ThrowIfCancellationRequested();
             Volatile.Write(ref _configuration, configuration);
             _detectionCancellation.Cancel();
+            return ValueTask.CompletedTask;
+        }
+
+        public ValueTask TriggerDetectionAsync(CancellationToken cancellationToken = default)
+        {
+            if (Volatile.Read(ref _isDisposed) != 0) return ValueTask.CompletedTask;
+            BeginDetect();
             return ValueTask.CompletedTask;
         }
 

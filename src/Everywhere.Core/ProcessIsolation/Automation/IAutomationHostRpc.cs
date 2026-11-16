@@ -105,4 +105,10 @@ public interface IAutomationHostRpc
     ValueTask<RpcAck> UpdateTextSelectionMonitoringAsync(
         UpdateTextSelectionMonitoringRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Explicitly requests the active native text-selection monitor to capture the current selection.</summary>
+    [RpcMethod(22)]
+    ValueTask<RpcAck> TriggerManualTextSelectionMonitoringAsync(
+        TriggerManualTextSelectionMonitoringRequest request,
+        CancellationToken cancellationToken = default);
 }

@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using Everywhere.Configuration;
 using Everywhere.Configuration.Migrations;
+using Everywhere.TextSelection;
 using NSubstitute;
 
 namespace Everywhere.Core.Tests.Configuration;
@@ -17,7 +18,10 @@ public sealed class TextSelectionSettingsTests
     [TestCase("com.example.Editor", "com.example.editor", false)]
     [TestCase("com.example.*", "com.example.Editor", false)]
 #else
-#error Implement application identity matching tests for this platform.
+    [TestCase("code", "/usr/bin/code", true)]
+    [TestCase("/usr/bin/code", "/usr/bin/code", true)]
+    [TestCase("/usr/bin/code", "/opt/code", false)]
+    [TestCase("*.exe", "/usr/bin/code", false)]
 #endif
     public void ToolbarExclusion_WhenApplicationMatches_DoesNotChangeCaptureRules(string rule, string identity, bool isExpectedMatch)
     {
@@ -89,5 +93,41 @@ public sealed class TextSelectionSettingsTests
             Assert.That(root["TextSelection"]?["Mac"]?["ExcludedApplications"]?[0]?.GetValue<string>(), Is.EqualTo("com.example.existing"));
             Assert.That(root["ChatWindow"]?.AsObject(), Is.Empty);
         });
+    }
+
+    [Test]
+    public void TextSelectionSettings_DefaultValues_AreExpected()
+    {
+        var settings = new Settings(Substitute.For<IServiceProvider>()).TextSelection;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(settings.TriggerMode, Is.EqualTo(TextSelectionTriggerMode.Always));
+            Assert.That(settings.TriggerModifierKey, Is.EqualTo(Avalonia.Input.KeyModifiers.Alt));
+            Assert.That(settings.ResultWindowMode, Is.EqualTo(TextSelectionResultWindowMode.Standalone));
+            Assert.That(settings.PositionMode, Is.EqualTo(TextSelectionPositionMode.FollowCursor));
+            Assert.That(settings.IsModifierTriggerMode, Is.False);
+        });
+    }
+
+    [Test]
+    public void CreateMonitoringConfiguration_PropagatesTriggerModeAndModifierKey()
+    {
+        var settings = new Settings(Substitute.For<IServiceProvider>()).TextSelection;
+        settings.IsToolbarEnabled = true;
+        settings.TriggerMode = TextSelectionTriggerMode.ModifierKey;
+        settings.TriggerModifierKey = Avalonia.Input.KeyModifiers.Control;
+
+        var config = settings.CreateMonitoringConfiguration();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(config.TriggerMode, Is.EqualTo(TextSelectionTriggerMode.ModifierKey));
+            Assert.That(config.TriggerModifierKey, Is.EqualTo(Avalonia.Input.KeyModifiers.Control));
+            Assert.That(settings.IsModifierTriggerMode, Is.True);
+        });
+
+        settings.IsToolbarEnabled = false;
+        Assert.That(settings.IsModifierTriggerMode, Is.False);
     }
 }

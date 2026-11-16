@@ -1,4 +1,4 @@
-﻿using Avalonia.Threading;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Everywhere.Automation;
 using Everywhere.Common;
@@ -78,6 +78,9 @@ public sealed class ChatWindowInitializer : IAsyncInitializer, IDisposable
         InitializeShortcut(
             _settings.Shortcut.TakeScreenshot,
             (shortcut, ref subscription) => RegisterScreenshotShortcut(chatWindowViewModel, shortcut, ref subscription));
+        InitializeShortcut(
+            _settings.Shortcut.TextSelectionToolbar,
+            (shortcut, ref subscription) => RegisterTextSelectionToolbarShortcut(shortcut, ref subscription));
 
         return Task.CompletedTask;
     }
@@ -214,6 +217,14 @@ public sealed class ChatWindowInitializer : IAsyncInitializer, IDisposable
         RegisterShortcutListener(
             shortcut,
             () => Dispatcher.UIThread.Post(() => chatWindowViewModel.TakeScreenshotCommand.Execute(null)),
+            ref subscription);
+    }
+
+    private void RegisterTextSelectionToolbarShortcut(KeyboardShortcut shortcut, ref IDisposable? subscription)
+    {
+        RegisterShortcutListener(
+            shortcut,
+            () => _textSelectionWatcher?.TriggerManualDetectionAsync().Detach(_logger.ToExceptionHandler()),
             ref subscription);
     }
 

@@ -36,4 +36,7 @@ public interface ITextSelectionWatcher : IObservable<TextSelectionData>, INotify
 
     /// <summary>Replaces the latest policy without changing monitoring enablement.</summary>
     void UpdateConfiguration(TextSelectionMonitoringConfiguration configuration);
+
+    /// <summary>Explicitly requests the active native text-selection monitor to capture the current selection.</summary>
+    ValueTask TriggerManualDetectionAsync(CancellationToken cancellationToken = default);
 }

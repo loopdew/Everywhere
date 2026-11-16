@@ -1,0 +1,164 @@
+<shadui:ShadWindow
+  x:Class="Everywhere.Views.TextSelectionResultWindow"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+  xmlns:v="clr-namespace:Everywhere.Views"
+  xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+  x:Name="Self"
+  Title="{I18N {x:Static LocaleKey.TextSelectionResultWindow_Title}}"
+  Width="480" Height="520"
+  MinWidth="360" MinHeight="320"
+  MaxWidth="800" MaxHeight="900"
+  TransparencyLevelHint="Mica,AcrylicBlur,Blur,None"
+  Background="{DynamicResource PopupBackgroundColor}"
+  Icon="avares://Everywhere.Core/Assets/Everywhere.png">
+
+  <shadui:ShadWindow.TitleBarContent>
+    <DockPanel Margin="12,0" VerticalAlignment="Center">
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+        <!-- Pin Button -->
+        <ToggleButton
+          x:Name="PinButton"
+          Classes="Ghost Compact"
+          Padding="6,4"
+          IsChecked="{Binding #Self.IsPinned, Mode=TwoWay}"
+          ToolTip.Tip="{I18N {x:Static LocaleKey.TextSelectionResultWindow_Pin}}">
+          <lucide:LucideIcon
+            Kind="Pin"
+            Size="{DynamicResource FontSizeM}"/>
+        </ToggleButton>
+
+        <!-- Open in Main Chat Window Button -->
+        <Button
+          x:Name="OpenInMainButton"
+          Classes="Ghost Compact"
+          Padding="6,4"
+          Click="HandleOpenInMainClick"
+          ToolTip.Tip="{I18N {x:Static LocaleKey.TextSelectionResultWindow_OpenInMainWindow}}">
+          <lucide:LucideIcon
+            Kind="ExternalLink"
+            Size="{DynamicResource FontSizeM}"/>
+        </Button>
+
+        <!-- Copy Full Result Button -->
+        <Button
+          x:Name="CopyResultButton"
+          Classes="Ghost Compact"
+          Padding="6,4"
+          Click="HandleCopyResultClick"
+          ToolTip.Tip="{I18N {x:Static LocaleKey.TextSelectionResultWindow_CopyResult}}">
+          <lucide:LucideIcon
+            Kind="Copy"
+            Size="{DynamicResource FontSizeM}"/>
+        </Button>
+      </StackPanel>
+
+      <!-- Left Title / Icon / Assistant Badge -->
+      <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <lucide:LucideIcon
+          Kind="Sparkles"
+          Size="{DynamicResource FontSizeM}"
+          Foreground="{DynamicResource PrimaryColor}"/>
+        <TextBlock
+          x:Name="TitleTextBlock"
+          Text="{Binding #Self.ActionTitle}"
+          FontWeight="SemiBold"
+          VerticalAlignment="Center"/>
+        <Border
+          x:Name="AssistantBadge"
+          Background="{DynamicResource LightCardBackgroundColor}"
+          CornerRadius="{DynamicResource SmCornerRadius}"
+          Padding="6,2"
+          IsVisible="{Binding #Self.AssistantName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+          VerticalAlignment="Center">
+          <TextBlock
+            Text="{Binding #Self.AssistantName}"
+            FontSize="{DynamicResource FontSizeXs}"
+            Foreground="{DynamicResource ForegroundLeadColor}"/>
+        </Border>
+      </StackPanel>
+    </DockPanel>
+  </shadui:ShadWindow.TitleBarContent>
+
+  <shadui:ShadWindow.Hosts>
+    <shadui:ToastHost/>
+  </shadui:ShadWindow.Hosts>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="12,8,12,12">
+    <!-- Selected text quote preview -->
+    <Border
+      Grid.Row="0"
+      Margin="0,0,0,8"
+      Padding="10,6"
+      Background="{DynamicResource LightCardBackgroundColor}"
+      BorderBrush="{DynamicResource BorderColor}"
+      BorderThickness="1"
+      CornerRadius="{DynamicResource MdCornerRadius}">
+      <DockPanel>
+        <lucide:LucideIcon
+          DockPanel.Dock="Left"
+          Kind="Quote"
+          Size="{DynamicResource FontSizeS}"
+          Foreground="{DynamicResource PrimaryColor}"
+          Margin="0,2,6,0"
+          VerticalAlignment="Top"/>
+        <TextBlock
+          x:Name="QuoteTextBlock"
+          Text="{Binding #Self.SelectedText}"
+          FontSize="{DynamicResource FontSizeS}"
+          Foreground="{DynamicResource ForegroundLeadColor}"
+          TextWrapping="Wrap"
+          MaxLines="3"
+          TextTrimming="CharacterEllipsis"/>
+      </DockPanel>
+    </Border>
+
+    <!-- Message items control inside ScrollViewer -->
+    <ScrollViewer
+      Grid.Row="1"
+      x:Name="MessageScrollViewer"
+      HorizontalContentAlignment="Stretch"
+      HorizontalScrollBarVisibility="Disabled"
+      VerticalScrollBarVisibility="Auto">
+      <v:ChatMessageItemsControl
+        x:Name="MessageItemsControl"
+        ChatContext="{Binding #Self.ChatContext}"
+        IsReadonly="True"/>
+    </ScrollViewer>
+
+    <!-- Bottom follow-up input -->
+    <Border
+      Grid.Row="2"
+      Margin="0,8,0,0"
+      Padding="4"
+      Background="{DynamicResource LightCardBackgroundColor}"
+      BorderBrush="{DynamicResource BorderColor}"
+      BorderThickness="1"
+      CornerRadius="{DynamicResource LgCornerRadius}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox
+          Grid.Column="0"
+          x:Name="FollowUpTextBox"
+          Classes="Clear"
+          PlaceholderText="{I18N {x:Static LocaleKey.TextSelectionResultWindow_FollowUpPlaceholder}}"
+          KeyDown="HandleFollowUpKeyDown"
+          AcceptsReturn="False"
+          VerticalAlignment="Center"
+          Padding="8,4"
+          BorderThickness="0"/>
+        <Button
+          Grid.Column="1"
+          x:Name="SendButton"
+          Classes="Ghost Compact"
+          Click="HandleSendClick"
+          Padding="6,4"
+          VerticalAlignment="Center">
+          <lucide:LucideIcon
+            Kind="Send"
+            Size="{DynamicResource FontSizeM}"/>
+        </Button>
+      </Grid>
+    </Border>
+  </Grid>
+</shadui:ShadWindow>

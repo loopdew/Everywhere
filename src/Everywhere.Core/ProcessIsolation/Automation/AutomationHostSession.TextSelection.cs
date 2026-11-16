@@ -152,6 +152,27 @@ public sealed partial class AutomationHostSession
         }
     }
 
+    /// <inheritdoc />
+    public async ValueTask<RpcAck> TriggerManualTextSelectionMonitoringAsync(
+        TriggerManualTextSelectionMonitoringRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.MonitorId);
+        TextSelectionMonitorRegistration? registration;
+        lock (_textSelectionGate)
+        {
+            registration = _textSelectionMonitor?.MonitorId == request.MonitorId ? _textSelectionMonitor : null;
+        }
+
+        if (registration is null)
+        {
+            return default;
+        }
+
+        await registration.Monitor.TriggerDetectionAsync(cancellationToken).ConfigureAwait(false);
+        return default;
+    }
+
     private async ValueTask PublishTextSelectionAsync(
         AutomationContextResource context,
         long contextId,

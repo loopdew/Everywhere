@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
   x:Class="Everywhere.Views.TextSelectionToolbar" xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
   xmlns:ts="clr-namespace:Everywhere.TextSelection" xmlns:v="clr-namespace:Everywhere.Views"
@@ -58,6 +58,22 @@
           <DataTemplate>
             <DockPanel
               MaxWidth="640" VerticalAlignment="Center">
+              <Border
+                x:Name="DragGrip"
+                Cursor="SizeAll"
+                Background="Transparent"
+                Padding="4,4"
+                VerticalAlignment="Stretch"
+                PointerPressed="HandleDragGripPointerPressed">
+                <ToolTip.Tip>
+                  <TextBlock Text="{I18N {x:Static LocaleKey.TextSelectionToolbar_DragHandle}}"/>
+                </ToolTip.Tip>
+                <LucideIcon
+                  Kind="GripVertical"
+                  Opacity="0.4"
+                  Size="{DynamicResource FontSizeM}"/>
+              </Border>
+
               <Button
                 Classes="Ghost Compact" Padding="6,4"
                 VerticalAlignment="Stretch" Click="HandleEnterFreeformChatClick"

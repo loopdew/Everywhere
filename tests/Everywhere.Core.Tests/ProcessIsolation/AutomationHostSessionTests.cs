@@ -1238,6 +1238,8 @@ public sealed class AutomationHostSessionTests
             TextSelectionMonitoringConfiguration configuration,
             CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
 
+        public ValueTask TriggerDetectionAsync(CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
+
         public ValueTask DisposeAsync()
         {
             Interlocked.Increment(ref _disposeCount);

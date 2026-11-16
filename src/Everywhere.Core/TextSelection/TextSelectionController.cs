@@ -1,4 +1,4 @@
-﻿using Avalonia.Threading;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Everywhere.Common;
@@ -144,6 +144,12 @@ public sealed partial class TextSelectionController : ObservableObject, IDisposa
             CommitToolbar(false);
         });
     }
+
+    /// <summary>
+    /// Explicitly triggers text-selection detection on the current foreground window.
+    /// </summary>
+    public ValueTask TriggerManualDetectionAsync(CancellationToken cancellationToken = default) =>
+        _watcher.TriggerManualDetectionAsync(cancellationToken);
 
     /// <inheritdoc />
     public void Dispose() => _watcher.RestorationRejected -= HandleRestorationRejected;

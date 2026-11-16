@@ -1,7 +1,9 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
+using Avalonia;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
+using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Everywhere.ProcessIsolation.Automation;
 using Everywhere.TextSelection;
@@ -123,6 +125,65 @@ public sealed partial class TextSelectionSettings(IServiceProvider serviceProvid
         Group = LocaleKey.TextSelectionSettings_Group_Toolbar)]
     public partial int VisibleActionCount { get; set; } = 5;
 
+    /// <summary>
+    /// Gets or sets how the text selection toolbar or assistant is triggered.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsModifierTriggerMode))]
+    [DynamicLocaleKey(
+        LocaleKey.TextSelectionSettings_TriggerMode_Header,
+        LocaleKey.TextSelectionSettings_TriggerMode_Description)]
+    [SettingsItem(
+        IsVisibleBindingPath = nameof(IsToolbarEnabled),
+        Group = LocaleKey.TextSelectionSettings_Group_Toolbar)]
+    public partial TextSelectionTriggerMode TriggerMode { get; set; } = TextSelectionTriggerMode.Always;
+
+    /// <summary>
+    /// Gets or sets the modifier key required when TriggerMode is ModifierKey.
+    /// </summary>
+    [ObservableProperty]
+    [DynamicLocaleKey(
+        LocaleKey.TextSelectionSettings_TriggerModifierKey_Header,
+        LocaleKey.TextSelectionSettings_TriggerModifierKey_Description)]
+    [SettingsItem(
+        IsVisibleBindingPath = nameof(IsModifierTriggerMode),
+        Group = LocaleKey.TextSelectionSettings_Group_Toolbar)]
+    public partial KeyModifiers TriggerModifierKey { get; set; } = KeyModifiers.Alt;
+
+    [JsonIgnore]
+    public bool IsModifierTriggerMode => IsToolbarEnabled && TriggerMode == TextSelectionTriggerMode.ModifierKey;
+
+    /// <summary>
+    /// Gets or sets whether AI results are displayed in a compact standalone window or the main chat window.
+    /// </summary>
+    [ObservableProperty]
+    [DynamicLocaleKey(
+        LocaleKey.TextSelectionSettings_ResultWindowMode_Header,
+        LocaleKey.TextSelectionSettings_ResultWindowMode_Description)]
+    [SettingsItem(
+        IsVisibleBindingPath = nameof(IsToolbarEnabled),
+        Group = LocaleKey.TextSelectionSettings_Group_Toolbar)]
+    public partial TextSelectionResultWindowMode ResultWindowMode { get; set; } = TextSelectionResultWindowMode.Standalone;
+
+    /// <summary>
+    /// Gets or sets whether the toolbar follows the selection cursor or remembers its last dragged position.
+    /// </summary>
+    [ObservableProperty]
+    [DynamicLocaleKey(
+        LocaleKey.TextSelectionSettings_PositionMode_Header,
+        LocaleKey.TextSelectionSettings_PositionMode_Description)]
+    [SettingsItem(
+        IsVisibleBindingPath = nameof(IsToolbarEnabled),
+        Group = LocaleKey.TextSelectionSettings_Group_Toolbar)]
+    public partial TextSelectionPositionMode PositionMode { get; set; } = TextSelectionPositionMode.FollowCursor;
+
+    /// <summary>
+    /// Persisted physical pixel position when PositionMode is RememberLast.
+    /// </summary>
+    [ObservableProperty]
+    [SettingsItemIgnore]
+    public partial PixelPoint? LastToolbarPosition { get; set; }
+
     [SettingsItemIgnore]
     public ObservableCollection<TextSelectionToolbarAction> ToolbarActions { get; } = [];
 
@@ -213,6 +274,9 @@ public sealed partial class TextSelectionSettings(IServiceProvider serviceProvid
     [SettingsItemIgnore]
     public MacTextSelectionSettings Mac { get; } = new();
 
+    [SettingsItemIgnore]
+    public LinuxTextSelectionSettings Linux { get; } = new();
+
     [JsonIgnore]
     [SettingsItemIgnore]
     public TextSelectionApplicationSettings Platform
@@ -223,6 +287,8 @@ public sealed partial class TextSelectionSettings(IServiceProvider serviceProvid
             return Mac;
 #elif WINDOWS
             return Windows;
+#elif LINUX
+            return Linux;
 #else
 #error Implement text-selection application settings for this platform.
 #endif
@@ -239,6 +305,8 @@ public sealed partial class TextSelectionSettings(IServiceProvider serviceProvid
             IsFullscreenApplicationExcluded = IsFullscreenExcluded,
             ExcludedApplications = Platform.ExcludedApplications,
             CopyFallbackExcludedApplications = Platform.CopyFallbackExcludedApplications,
+            TriggerMode = TriggerMode,
+            TriggerModifierKey = TriggerModifierKey,
         };
     }
 }
@@ -274,15 +342,26 @@ public abstract partial class TextSelectionApplicationSettings : ObservableObjec
         }
 
 #if WINDOWS
-        var processName = Path.GetFileName(identity);
+        var processName = GetFileName(identity);
         return ToolbarExcludedApplications.Any(application =>
             string.Equals(application, identity, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(application, processName, StringComparison.OrdinalIgnoreCase));
 #elif MACOS
         return ToolbarExcludedApplications.Contains(identity, StringComparer.Ordinal);
+#elif LINUX
+        var processName = GetFileName(identity);
+        return ToolbarExcludedApplications.Any(application =>
+            string.Equals(application, identity, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(application, processName, StringComparison.OrdinalIgnoreCase));
 #else
 #error Implement toolbar application identity matching for this platform.
 #endif
+    }
+
+    private static string GetFileName(string path)
+    {
+        var lastSeparator = Math.Max(path.LastIndexOf('/'), path.LastIndexOf('\\'));
+        return lastSeparator >= 0 ? path[(lastSeparator + 1)..] : path;
     }
 }
 
@@ -295,3 +374,8 @@ public sealed class WindowsTextSelectionSettings : TextSelectionApplicationSetti
 /// macOS rules match exact, case-sensitive application bundle identifiers.
 /// </summary>
 public sealed class MacTextSelectionSettings : TextSelectionApplicationSettings;
+
+/// <summary>
+/// Linux rules match executable names or paths.
+/// </summary>
+public sealed class LinuxTextSelectionSettings : TextSelectionApplicationSettings;

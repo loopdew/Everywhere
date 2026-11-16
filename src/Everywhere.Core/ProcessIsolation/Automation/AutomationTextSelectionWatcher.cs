@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Threading.Channels;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -202,6 +202,22 @@ public sealed class AutomationTextSelectionWatcher : ObservableObject, ITextSele
             _configurationRevision++;
         }
         SignalStateChanged();
+    }
+
+    /// <inheritdoc />
+    public async ValueTask TriggerManualDetectionAsync(CancellationToken cancellationToken = default)
+    {
+        RemoteTextSelectionMonitor? monitor;
+        lock (_stateGate)
+        {
+            if (_isDisposed != 0 || !_isCommittedEnabled) return;
+            monitor = _monitor;
+        }
+
+        if (monitor is not null)
+        {
+            await monitor.TriggerManualDetectionAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <inheritdoc />

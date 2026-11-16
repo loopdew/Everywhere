@@ -183,7 +183,9 @@ public sealed partial class TextSelectionApplicationsControl : UserControl
             application = _nativeHelper.GetApplicationInfo(row.Identity);
             icon = _nativeHelper.GetApplicationIcon(application?.Path);
 #else
-#error Implement application metadata and icon loading for this platform.
+            await Task.CompletedTask;
+            application = _nativeHelper.GetApplicationInfo(row.Identity);
+            icon = _nativeHelper.GetApplicationIcon(application?.Path);
 #endif
             if (cancellationToken.IsCancellationRequested || !Presentation.Rows.Contains(row))
             {
@@ -278,7 +280,7 @@ public sealed partial class TextSelectionApplicationsControl : UserControl
                                 Patterns = ["*.app"],
                                 AppleUniformTypeIdentifiers = ["com.apple.application-bundle"],
 #else
-#error Implement the application file picker for this platform.
+                                Patterns = ["*"],
 #endif
                             },
                         ],
@@ -397,7 +399,7 @@ public sealed partial class TextSelectionApplicationsControl : UserControl
 #elif WINDOWS
             return StringComparer.OrdinalIgnoreCase;
 #else
-#error Define application identity comparison for this platform.
+            return StringComparer.Ordinal;
 #endif
         }
     }
@@ -442,7 +444,11 @@ public sealed partial class TextSelectionApplicationsPresentation : ObservableVa
 
     public IDynamicLocaleKey ManualPlaceholder { get; } = new DirectLocaleKey("Code.exe");
 #else
-#error Define the manual application identity editor for this platform.
+    public IDynamicLocaleKey ManualLabel { get; } = new DynamicLocaleKey(LocaleKey.TextSelectionApplications_AddProcessName);
+
+    public IDynamicLocaleKey ManualHint { get; } = new DynamicLocaleKey(LocaleKey.TextSelectionApplications_ProcessNameHint);
+
+    public IDynamicLocaleKey ManualPlaceholder { get; } = new DirectLocaleKey("code");
 #endif
 
     /// <summary>
@@ -476,7 +482,7 @@ public sealed partial class TextSelectionApplicationsPresentation : ObservableVa
         var isValid = identity.Length > 4 && identity.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
             identity.IndexOfAny(['\\', '/', ':', '*', '?', '"', '<', '>', '|']) < 0 && !identity.Any(char.IsControl);
 #else
-#error Implement manual application identity validation for this platform.
+        var isValid = identity.Length > 0 && identity.IndexOfAny(['\\', '/', ':', '*', '?', '"', '<', '>', '|']) < 0 && !identity.Any(char.IsControl);
 #endif
         return isValid ? ValidationResult.Success : new ValidationResult(LocaleKey.TextSelectionApplications_InvalidIdentity.I18N());
     }

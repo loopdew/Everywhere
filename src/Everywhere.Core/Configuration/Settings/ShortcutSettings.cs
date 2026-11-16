@@ -1,4 +1,4 @@
-﻿using Avalonia.Input;
+using Avalonia.Input;
 using Everywhere.Interop;
 using Lucide.Avalonia;
 
@@ -36,4 +36,10 @@ public sealed partial class ShortcutSettings(IServiceProvider serviceProvider) :
         LocaleKey.ShortcutSettings_TakeScreenshot_Desription)]
     [SettingsTemplatedItem]
     public CompositeKeyboardShortcut TakeScreenshot { get; } = new();
+
+    [DynamicLocaleKey(
+        LocaleKey.ShortcutSettings_TextSelectionToolbar_Header,
+        LocaleKey.ShortcutSettings_TextSelectionToolbar_Description)]
+    [SettingsTemplatedItem]
+    public CompositeKeyboardShortcut TextSelectionToolbar { get; } = new();
 }

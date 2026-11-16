@@ -4622,4 +4622,82 @@
     <data name="Common_CopyLinkText" xml:space="preserve">
         <value>複製連結文字</value>
     </data>
+    <data name="TextSelectionSettings_TriggerMode_Header" xml:space="preserve">
+        <value>觸發模式</value>
+    </data>
+    <data name="TextSelectionSettings_TriggerMode_Description" xml:space="preserve">
+        <value>劃選文字後如何觸發劃詞工具列或助手。</value>
+    </data>
+    <data name="TextSelectionTriggerMode_Always" xml:space="preserve">
+        <value>自動快顯（劃選後立即快顯）</value>
+    </data>
+    <data name="TextSelectionTriggerMode_ModifierKey" xml:space="preserve">
+        <value>按住修飾鍵劃詞觸發</value>
+    </data>
+    <data name="TextSelectionTriggerMode_ShortcutOnly" xml:space="preserve">
+        <value>僅快速鍵主動喚出</value>
+    </data>
+    <data name="TextSelectionSettings_TriggerModifierKey_Header" xml:space="preserve">
+        <value>觸發修飾鍵</value>
+    </data>
+    <data name="TextSelectionSettings_TriggerModifierKey_Description" xml:space="preserve">
+        <value>劃選文字時需要按住的修飾鍵（如 Alt、Ctrl、Shift）。</value>
+    </data>
+    <data name="TextSelectionSettings_ResultWindowMode_Header" xml:space="preserve">
+        <value>結果展示方式</value>
+    </data>
+    <data name="TextSelectionSettings_ResultWindowMode_Description" xml:space="preserve">
+        <value>選擇在獨立緊湊懸浮視窗中展示 AI 結果還是轉入主聊天視窗。</value>
+    </data>
+    <data name="TextSelectionResultWindowMode_Standalone" xml:space="preserve">
+        <value>獨立緊湊懸浮視窗</value>
+    </data>
+    <data name="TextSelectionResultWindowMode_MainChatWindow" xml:space="preserve">
+        <value>主聊天視窗</value>
+    </data>
+    <data name="TextSelectionSettings_PositionMode_Header" xml:space="preserve">
+        <value>工具列位置模式</value>
+    </data>
+    <data name="TextSelectionSettings_PositionMode_Description" xml:space="preserve">
+        <value>選擇工具列跟隨游標位置還是記住上次拖曳調整的位置。</value>
+    </data>
+    <data name="TextSelectionPositionMode_FollowCursor" xml:space="preserve">
+        <value>跟隨游標</value>
+    </data>
+    <data name="TextSelectionPositionMode_RememberLast" xml:space="preserve">
+        <value>記住上次位置</value>
+    </data>
+    <data name="TextSelectionToolbar_DragHandle" xml:space="preserve">
+        <value>拖曳調整工具列位置</value>
+    </data>
+    <data name="TextSelectionResultWindow_Title" xml:space="preserve">
+        <value>劃詞助手</value>
+    </data>
+    <data name="TextSelectionResultWindow_Pin" xml:space="preserve">
+        <value>釘住視窗</value>
+    </data>
+    <data name="TextSelectionResultWindow_Unpin" xml:space="preserve">
+        <value>取消釘住</value>
+    </data>
+    <data name="TextSelectionResultWindow_OpenInMainWindow" xml:space="preserve">
+        <value>在主視窗開啟</value>
+    </data>
+    <data name="TextSelectionResultWindow_CopyResult" xml:space="preserve">
+        <value>複製結果</value>
+    </data>
+    <data name="TextSelectionResultWindow_Copied" xml:space="preserve">
+        <value>結果已複製至剪貼簿</value>
+    </data>
+    <data name="TextSelectionResultWindow_FollowUpPlaceholder" xml:space="preserve">
+        <value>繼續追問... (Enter 發送)</value>
+    </data>
+    <data name="TextSelectionResultWindow_OriginalText" xml:space="preserve">
+        <value>選取文字</value>
+    </data>
+    <data name="ShortcutSettings_TextSelectionToolbar_Header" xml:space="preserve">
+        <value>劃詞助手</value>
+    </data>
+    <data name="ShortcutSettings_TextSelectionToolbar_Description" xml:space="preserve">
+        <value>對目前選取的文字主動喚出劃詞助手。</value>
+    </data>
 </root>

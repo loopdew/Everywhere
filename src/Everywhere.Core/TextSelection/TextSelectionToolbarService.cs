@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Everywhere.AI;
@@ -28,6 +28,7 @@ public sealed class TextSelectionToolbarService : IDisposable
     private readonly ILogger<TextSelectionToolbarService> _logger;
 
     private TextSelectionToolbarWindow? _toolbar;
+    private TextSelectionResultWindow? _resultWindow;
     private TextSelectionAttachment? _selection;
     private TextSelectionData? _observation;
     private bool _ownsSelection;
@@ -112,14 +113,44 @@ public sealed class TextSelectionToolbarService : IDisposable
             return;
         }
 
-        // Ownership moves to the draft before any synchronous collection notifications can run.
+        var anchor = _observation.PointerPosition ?? PixelPoint.Origin;
+        var selectedText = selection.Text;
+
+        // Ownership moves to the draft or context before any synchronous collection notifications can run.
         _selection = null;
         _ownsSelection = false;
         try
         {
-            var chatWindow = _serviceProvider.GetRequiredService<ChatWindow>();
-            chatWindow.ViewModel.RunStrategyOnTextSelection(selection, strategy);
-            _windowHelper.BringToForeground(chatWindow);
+            if (_settings.TextSelection.ResultWindowMode == TextSelectionResultWindowMode.Standalone)
+            {
+                var chatService = _serviceProvider.GetRequiredService<IChatService>();
+                var title = strategy.NameKey.ToString() ?? "Text Selection";
+                var context = new ChatContext
+                {
+                    Metadata =
+                    {
+                        Topic = title,
+                        IsTemporary = true,
+                    },
+                };
+
+                var userMessage = new UserStrategyChatMessage(string.Empty, [selection], strategy);
+                chatService.SendMessage(context, userMessage);
+
+                if (_resultWindow is null)
+                {
+                    _resultWindow = new TextSelectionResultWindow(chatService, _windowHelper);
+                    _resultWindow.OpenInMainRequested += TransferToMainWindow;
+                }
+
+                _resultWindow.ShowFor(context, title, selectedText, null, anchor);
+            }
+            else
+            {
+                var chatWindow = _serviceProvider.GetRequiredService<ChatWindow>();
+                chatWindow.ViewModel.RunStrategyOnTextSelection(selection, strategy);
+                _windowHelper.BringToForeground(chatWindow);
+            }
         }
         catch (Exception exception)
         {
@@ -139,30 +170,82 @@ public sealed class TextSelectionToolbarService : IDisposable
             return false;
         }
 
-        var isAccepted = false;
+        var anchor = _observation.PointerPosition ?? PixelPoint.Origin;
+        var selectedText = selection.Text;
+
         try
         {
-            var chatWindow = _serviceProvider.GetRequiredService<ChatWindow>();
-            var message = new UserChatMessage(text, [selection]);
-            isAccepted = chatWindow.ViewModel.SendTextSelectionMessage(message, assistant);
-            if (!isAccepted)
+            if (_settings.TextSelection.ResultWindowMode == TextSelectionResultWindowMode.Standalone)
             {
-                return false;
-            }
+                var chatService = _serviceProvider.GetRequiredService<IChatService>();
+                var context = new ChatContext
+                {
+                    Metadata =
+                    {
+                        Topic = "Text Selection",
+                        IsTemporary = true,
+                    },
+                };
 
-            // Acceptance transfers ownership. Removing a borrowed selection may already have
-            // hidden the toolbar through ValidateChatSelection; owned selections leave this service here.
-            _selection = null;
-            _ownsSelection = false;
-            Hide();
-            WeakReferenceMessenger.Default.Send(new CloakChatWindowMessage(false));
-            _windowHelper.BringToForeground(chatWindow);
-            return true;
+                var message = new UserChatMessage(text, [selection]);
+                var isAccepted = chatService.SendMessage(context, message, assistant);
+                if (!isAccepted)
+                {
+                    return false;
+                }
+
+                _selection = null;
+                _ownsSelection = false;
+                Hide();
+
+                if (_resultWindow is null)
+                {
+                    _resultWindow = new TextSelectionResultWindow(chatService, _windowHelper);
+                    _resultWindow.OpenInMainRequested += TransferToMainWindow;
+                }
+
+                _resultWindow.ShowFor(context, LocaleKey.TextSelectionResultWindow_Title.I18N(), selectedText, assistant, anchor);
+                return true;
+            }
+            else
+            {
+                var chatWindow = _serviceProvider.GetRequiredService<ChatWindow>();
+                var message = new UserChatMessage(text, [selection]);
+                var isAccepted = chatWindow.ViewModel.SendTextSelectionMessage(message, assistant);
+                if (!isAccepted)
+                {
+                    return false;
+                }
+
+                _selection = null;
+                _ownsSelection = false;
+                Hide();
+                WeakReferenceMessenger.Default.Send(new CloakChatWindowMessage(false));
+                _windowHelper.BringToForeground(chatWindow);
+                return true;
+            }
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Failed to submit text selection chat.");
-            return isAccepted;
+            return false;
+        }
+    }
+
+    private void TransferToMainWindow(ChatContext context)
+    {
+        try
+        {
+            context.Metadata.IsTemporary = false;
+            var chatWindow = _serviceProvider.GetRequiredService<ChatWindow>();
+            var chatContextManager = _serviceProvider.GetRequiredService<IChatContextManager>();
+            chatContextManager.CurrentMetadata = context.Metadata;
+            WeakReferenceMessenger.Default.Send(new CloakChatWindowMessage(false));
+            _windowHelper.BringToForeground(chatWindow);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to transfer text selection session to main window.");
         }
     }
 
@@ -232,6 +315,15 @@ public sealed class TextSelectionToolbarService : IDisposable
     {
         _settings.TextSelection.PropertyChanged -= HandleSettingsChanged;
         _settings.TextSelection.Platform.PropertyChanged -= HandleSettingsChanged;
-        Dispatcher.UIThread.PostOnDemand(Hide);
+        Dispatcher.UIThread.PostOnDemand(() =>
+        {
+            Hide();
+            if (_resultWindow is not null)
+            {
+                _resultWindow.OpenInMainRequested -= TransferToMainWindow;
+                _resultWindow.Close();
+                _resultWindow = null;
+            }
+        });
     }
 }

@@ -59,6 +59,18 @@ public sealed class RemoteTextSelectionMonitor : RpcSafeHandle
             cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Explicitly requests the native monitor to capture the current text selection.</summary>
+    public async ValueTask TriggerManualDetectionAsync(CancellationToken cancellationToken = default)
+    {
+        using var lease = AcquireLease();
+        await _rpc.TriggerManualTextSelectionMonitoringAsync(
+            new TriggerManualTextSelectionMonitoringRequest
+            {
+                MonitorId = lease.ResourceId,
+            },
+            cancellationToken).ConfigureAwait(false);
+    }
+
     protected override bool ReleaseHandle()
     {
         try

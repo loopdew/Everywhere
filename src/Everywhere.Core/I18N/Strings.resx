@@ -4622,4 +4622,82 @@ If you continue, the other copy will shut down service mode.</value>
     <data name="Common_CopyLinkText" xml:space="preserve">
         <value>Copy link text</value>
     </data>
+    <data name="TextSelectionSettings_TriggerMode_Header" xml:space="preserve">
+        <value>Trigger Mode</value>
+    </data>
+    <data name="TextSelectionSettings_TriggerMode_Description" xml:space="preserve">
+        <value>How text selection assistant is triggered after selecting text.</value>
+    </data>
+    <data name="TextSelectionTriggerMode_Always" xml:space="preserve">
+        <value>Automatic (Immediately on selection)</value>
+    </data>
+    <data name="TextSelectionTriggerMode_ModifierKey" xml:space="preserve">
+        <value>Hold modifier key while selecting</value>
+    </data>
+    <data name="TextSelectionTriggerMode_ShortcutOnly" xml:space="preserve">
+        <value>Shortcut only (Manual trigger)</value>
+    </data>
+    <data name="TextSelectionSettings_TriggerModifierKey_Header" xml:space="preserve">
+        <value>Trigger Modifier Key</value>
+    </data>
+    <data name="TextSelectionSettings_TriggerModifierKey_Description" xml:space="preserve">
+        <value>The modifier key to hold while selecting text to trigger the toolbar.</value>
+    </data>
+    <data name="TextSelectionSettings_ResultWindowMode_Header" xml:space="preserve">
+        <value>Result Display Mode</value>
+    </data>
+    <data name="TextSelectionSettings_ResultWindowMode_Description" xml:space="preserve">
+        <value>Display AI results in a standalone compact floating window or in the main chat window.</value>
+    </data>
+    <data name="TextSelectionResultWindowMode_Standalone" xml:space="preserve">
+        <value>Compact floating window</value>
+    </data>
+    <data name="TextSelectionResultWindowMode_MainChatWindow" xml:space="preserve">
+        <value>Main chat window</value>
+    </data>
+    <data name="TextSelectionSettings_PositionMode_Header" xml:space="preserve">
+        <value>Toolbar Position Mode</value>
+    </data>
+    <data name="TextSelectionSettings_PositionMode_Description" xml:space="preserve">
+        <value>Choose whether the toolbar follows the selection cursor or remembers its last dragged position.</value>
+    </data>
+    <data name="TextSelectionPositionMode_FollowCursor" xml:space="preserve">
+        <value>Follow cursor</value>
+    </data>
+    <data name="TextSelectionPositionMode_RememberLast" xml:space="preserve">
+        <value>Remember last position</value>
+    </data>
+    <data name="TextSelectionToolbar_DragHandle" xml:space="preserve">
+        <value>Drag to move toolbar</value>
+    </data>
+    <data name="TextSelectionResultWindow_Title" xml:space="preserve">
+        <value>Text Selection Assistant</value>
+    </data>
+    <data name="TextSelectionResultWindow_Pin" xml:space="preserve">
+        <value>Pin window</value>
+    </data>
+    <data name="TextSelectionResultWindow_Unpin" xml:space="preserve">
+        <value>Unpin window</value>
+    </data>
+    <data name="TextSelectionResultWindow_OpenInMainWindow" xml:space="preserve">
+        <value>Open in main window</value>
+    </data>
+    <data name="TextSelectionResultWindow_CopyResult" xml:space="preserve">
+        <value>Copy result</value>
+    </data>
+    <data name="TextSelectionResultWindow_Copied" xml:space="preserve">
+        <value>Result copied to clipboard</value>
+    </data>
+    <data name="TextSelectionResultWindow_FollowUpPlaceholder" xml:space="preserve">
+        <value>Ask follow-up... (Press Enter)</value>
+    </data>
+    <data name="TextSelectionResultWindow_OriginalText" xml:space="preserve">
+        <value>Selected text</value>
+    </data>
+    <data name="ShortcutSettings_TextSelectionToolbar_Header" xml:space="preserve">
+        <value>Text Selection Assistant</value>
+    </data>
+    <data name="ShortcutSettings_TextSelectionToolbar_Description" xml:space="preserve">
+        <value>Trigger text selection assistant on currently selected text.</value>
+    </data>
 </root>

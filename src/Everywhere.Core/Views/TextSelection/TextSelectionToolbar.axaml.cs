@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -158,6 +158,16 @@ public partial class TextSelectionToolbar : UserControl
     /// Reports the menu's physical bounds so the native dismissal watcher treats it as part of the toolbar.
     /// </summary>
     public event Action<PixelRect?>? MenuBoundsChanged;
+
+    /// <summary>
+    /// Raised when the user initiates dragging via the grip handle.
+    /// </summary>
+    public event EventHandler<PointerPressedEventArgs>? DragRequested;
+
+    private void HandleDragGripPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        DragRequested?.Invoke(this, e);
+    }
 
     /// <summary>
     /// Reports local menu pointer movement for the settings preview, without requiring global input hooks.

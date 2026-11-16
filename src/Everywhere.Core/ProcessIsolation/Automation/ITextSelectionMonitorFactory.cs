@@ -31,6 +31,9 @@ public interface ITextSelectionMonitor : IAsyncDisposable
 {
     /// <summary>Atomically replaces the policy used for subsequent detection decisions.</summary>
     ValueTask UpdateConfigurationAsync(TextSelectionMonitoringConfiguration configuration, CancellationToken cancellationToken = default);
+
+    /// <summary>Actively triggers a selection detection check on the current foreground window and pointer position.</summary>
+    ValueTask TriggerDetectionAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>Owns a retained source element observed together with selected text.</summary>

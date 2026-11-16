@@ -1,4 +1,4 @@
-﻿using System.Reactive.Disposables;
+using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
@@ -71,7 +71,7 @@ public sealed class WindowHelper : IWindowHelper
     {
         // Passive effect windows must not switch the application away from Accessory mode,
         // because that mode is part of keeping overlays visible over other apps' full-screen spaces.
-        if (window is not ChatWindow and not VisualElementEffectWindow and not TextSelectionToolbarWindow) OpenedWindowCount++;
+        if (window is not ChatWindow and not VisualElementEffectWindow and not TextSelectionToolbarWindow and not TextSelectionResultWindow) OpenedWindowCount++;
 
         if (_windowProperties.TryGetValue(window, out var properties) && GetNativeWindow(window) is { } nativeWindow)
         {
@@ -83,7 +83,7 @@ public sealed class WindowHelper : IWindowHelper
 
     private void HandleWindowClosed(Window window, RoutedEventArgs args)
     {
-        if (window is not ChatWindow and not VisualElementEffectWindow and not TextSelectionToolbarWindow) OpenedWindowCount--;
+        if (window is not ChatWindow and not VisualElementEffectWindow and not TextSelectionToolbarWindow and not TextSelectionResultWindow) OpenedWindowCount--;
     }
 
     /// <summary>
