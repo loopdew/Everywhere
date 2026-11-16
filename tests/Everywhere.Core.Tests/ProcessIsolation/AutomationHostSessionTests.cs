@@ -372,6 +372,59 @@ public sealed class AutomationHostSessionTests
     }
 
     [Test]
+    public async Task AutomationTextSelectionWatcher_TriggerManualDetection_InvokesRemoteMonitorAndSyncsTriggerModeOverRpc()
+    {
+        await using var pair = await TestConnectionPair.CreateAsync();
+        var backend = new TestBackend { ElementType = VisualElementType.Label };
+        var monitorFactory = new TestTextSelectionMonitorFactory();
+        await using var session = new AutomationHostSession(backend, Substitute.For<IVisualPickerResolver>(), monitorFactory);
+        session.Bind(pair.Server);
+        session.OnAuthenticated(
+            new RpcHandshake
+            {
+                AssemblyInformationalVersion = "test",
+                Role = ProcessRoleNames.ToWireName(ProcessRole.Main),
+                ProcessId = Environment.ProcessId,
+                DesktopSessionId = "test",
+            });
+        pair.Server.Start();
+        pair.Client.Start();
+
+        var connectionSource = new WatchingTestHostConnectionSource(pair.Client);
+        using var visualService = new ChatVisualService(connectionSource);
+        await using var watcher = new AutomationTextSelectionWatcher(
+            connectionSource,
+            visualService,
+            new Settings(Substitute.For<IServiceProvider>()),
+            Substitute.For<Microsoft.Extensions.Logging.ILogger<AutomationTextSelectionWatcher>>());
+
+        var observer = new TestTextSelectionObserver();
+        using var subscription = watcher.Subscribe(observer);
+        var customConfig = new TextSelectionMonitoringConfiguration
+        {
+            IsFullscreenApplicationExcluded = true,
+            ExcludedApplications = [],
+            CopyFallbackExcludedApplications = [],
+            TriggerMode = Everywhere.TextSelection.TextSelectionTriggerMode.ModifierKey,
+            TriggerModifierKey = Avalonia.Input.KeyModifiers.Control,
+        };
+        watcher.UpdateConfiguration(customConfig);
+        await watcher.SetEnabledCommand.ExecuteAsync(true).WaitAsync(TimeSpan.FromSeconds(5));
+        await WaitForAsync(() => monitorFactory.IsStarted);
+
+        await watcher.TriggerManualDetectionAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(monitorFactory.TriggerCount, Is.EqualTo(1));
+            Assert.That(monitorFactory.LastConfiguration?.TriggerMode, Is.EqualTo(Everywhere.TextSelection.TextSelectionTriggerMode.ModifierKey));
+            Assert.That(monitorFactory.LastConfiguration?.TriggerModifierKey, Is.EqualTo(Avalonia.Input.KeyModifiers.Control));
+        });
+
+        await watcher.SetEnabledCommand.ExecuteAsync(false).WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Test]
     public async Task CreateContextAsync_WhenCancelledAfterDispatch_ReleasesResourceRegisteredLater()
     {
         await using var pair = await TestConnectionPair.CreateAsync();
@@ -1189,6 +1242,8 @@ public sealed class AutomationHostSessionTests
     private sealed class TestTextSelectionMonitorFactory : ITextSelectionMonitorFactory
     {
         public int DisposeCount => _monitor?.DisposeCount ?? 0;
+        public int TriggerCount => _monitor?.TriggerCount ?? 0;
+        public TextSelectionMonitoringConfiguration? LastConfiguration => _monitor?.LastConfiguration;
         public bool IsStarted => _monitor is not null;
 
         private ITextSelectionMonitorContext? _context;
@@ -1204,7 +1259,7 @@ public sealed class AutomationHostSessionTests
         {
             _context = context;
             _publish = publish;
-            _monitor = new TestTextSelectionMonitor();
+            _monitor = new TestTextSelectionMonitor(configuration);
             return _monitor;
         }
 
@@ -1228,17 +1283,29 @@ public sealed class AutomationHostSessionTests
         }
     }
 
-    private sealed class TestTextSelectionMonitor : ITextSelectionMonitor
+    private sealed class TestTextSelectionMonitor(TextSelectionMonitoringConfiguration initialConfiguration) : ITextSelectionMonitor
     {
         public int DisposeCount => Volatile.Read(ref _disposeCount);
+        public int TriggerCount => Volatile.Read(ref _triggerCount);
+        public TextSelectionMonitoringConfiguration LastConfiguration => _lastConfiguration;
 
         private int _disposeCount;
+        private int _triggerCount;
+        private TextSelectionMonitoringConfiguration _lastConfiguration = initialConfiguration;
 
         public ValueTask UpdateConfigurationAsync(
             TextSelectionMonitoringConfiguration configuration,
-            CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
+            CancellationToken cancellationToken = default)
+        {
+            _lastConfiguration = configuration;
+            return ValueTask.CompletedTask;
+        }
 
-        public ValueTask TriggerDetectionAsync(CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
+        public ValueTask TriggerDetectionAsync(CancellationToken cancellationToken = default)
+        {
+            Interlocked.Increment(ref _triggerCount);
+            return ValueTask.CompletedTask;
+        }
 
         public ValueTask DisposeAsync()
         {
